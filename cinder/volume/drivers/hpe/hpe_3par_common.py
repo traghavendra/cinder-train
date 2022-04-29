@@ -3242,17 +3242,24 @@ class HPE3PARCommon(object):
                 # 3par array; which later leads to error during volume
                 # deletion.
 
-                same_host = True
+                same_host = False
                 num_hosts = len(attachment_list)
                 all_hostnames = []
-                first_hostname = attachment_list[0].attached_host
-                all_hostnames.append(first_hostname)
+                all_hostnames.append(hostname)
 
-                for i in range(1, num_hosts):
-                    other_hostname = attachment_list[i].attached_host
-                    if first_hostname != other_hostname:
-                        all_hostnames.append(other_hostname)
-                        same_host = False
+                count = 0
+                for i in range(num_hosts):
+                    hostname_i = str(attachment_list[i].attached_host)
+                    if hostname == hostname_i:
+                        # current host
+                        count = count + 1
+                        if count > 1:
+                            # volume attached to multiple instances on
+                            # current host
+                            same_host = True
+                    else:
+                        # different host
+                        all_hostnames.append(hostname_i)
 
                 if same_host:
                     LOG.info("Volume %(volume)s is attached to multiple "
