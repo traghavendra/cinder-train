@@ -3221,6 +3221,7 @@ class HPE3PARCommon(object):
             LOG.debug("Volume attachment list: %(atl)s",
                       {'atl': attachment_list})
 
+            LOG.debug("hostname: %(hst)s", {'hst': hostname})
             try:
                 attachment_list = attachment_list.objects
             except AttributeError:
@@ -3250,7 +3251,11 @@ class HPE3PARCommon(object):
                 count = 0
                 for i in range(num_hosts):
                     hostname_i = str(attachment_list[i].attached_host)
-                    if hostname == hostname_i:
+                    LOG.debug("hostname_[%(i)s]: %(hostname_i)s",
+                              {'i': i, 'hostname_i': hostname_i})
+
+                    if (hostname_i.find(hostname) != -1):
+                        # hostname_i contains substring hostname
                         # current host
                         count = count + 1
                         if count > 1:
@@ -3258,6 +3263,7 @@ class HPE3PARCommon(object):
                             # current host
                             same_host = True
                     else:
+                        # hostname_i does NOT contain substring hostname
                         # different host
                         all_hostnames.append(hostname_i)
 
@@ -3275,6 +3281,14 @@ class HPE3PARCommon(object):
                              "deletion of vlun on this host.",
                              {'volume': volume.name, 'hostnames': hostnames})
 
+            if attachment_list is not None and len(attachment_list) == 1:
+                hostname_i = str(attachment_list[0].attached_host)
+                LOG.info("Volume %(volume)s is attached to "
+                         "instance on single host %(host_name)s, Proceed with "
+                         "deletion of vlun on this host.",
+                         {'volume': volume.name,
+                          'host_name': hostname_i})
+
         # does 3par know this host by a different name?
         hosts = None
         if wwn:
@@ -3287,6 +3301,7 @@ class HPE3PARCommon(object):
                 hostname = hosts['members'][0]['name']
 
         try:
+            LOG.debug("Calling delete_vlun")
             self.delete_vlun(volume, hostname, wwn=wwn, iqn=iqn,
                              remote_client=remote_client)
             return
