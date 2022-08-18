@@ -3246,7 +3246,6 @@ class HPE3PARCommon(object):
                 same_host = False
                 num_hosts = len(attachment_list)
                 all_hostnames = []
-                all_hostnames.append(hostname)
 
                 count = 0
                 for i in range(num_hosts):
@@ -3257,6 +3256,7 @@ class HPE3PARCommon(object):
                     if (hostname_i.find(hostname) != -1):
                         # hostname_i contains substring hostname
                         # current host
+                        all_hostnames.append(hostname_i)
                         count = count + 1
                         if count > 1:
                             # volume attached to multiple instances on
@@ -3267,6 +3267,9 @@ class HPE3PARCommon(object):
                         # different host
                         all_hostnames.append(hostname_i)
 
+                all_hosts_str = ",".join(all_hostnames)
+                LOG.debug("all_hostnames: %(all_hosts_str)s",
+                          {'all_hosts_str': all_hosts_str})
                 if same_host:
                     LOG.info("Volume %(volume)s is attached to multiple "
                              "instances on same host %(host_name)s, "
@@ -3278,8 +3281,9 @@ class HPE3PARCommon(object):
                     hostnames = ",".join(all_hostnames)
                     LOG.info("Volume %(volume)s is attached to instances "
                              "on multiple hosts %(hostnames)s. Proceed with "
-                             "deletion of vlun on this host.",
-                             {'volume': volume.name, 'hostnames': hostnames})
+                             "deletion of vlun on this host i.e %(this_host)s",
+                             {'volume': volume.name, 'hostnames': hostnames,
+                              'this_host': hostname})
 
             if attachment_list is not None and len(attachment_list) == 1:
                 hostname_i = str(attachment_list[0].attached_host)
